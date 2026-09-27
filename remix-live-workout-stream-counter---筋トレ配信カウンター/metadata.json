@@ -1,0 +1,8 @@
+{
+  "name": "Remix Live Workout Stream Counter - 筋トレ配信カウンター",
+  "description": "ライブ配信でギフト妨害と戦いながら腕立て500回を目指す！ギフト連動・実績＆残り回数ワンタップコピー対応の筋トレカウンター（iPad横向き完全対応）",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

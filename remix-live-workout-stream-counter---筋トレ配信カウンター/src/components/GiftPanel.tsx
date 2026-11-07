@@ -194,7 +194,7 @@ export const GiftPanel: React.FC<GiftPanelProps> = ({
                       : isSwan
                       ? '連続10回'
                       : isCorgi
-                      ? '懸垂10回'
+                      ? 'ワイパー10回'
                       : isCrab
                       ? 'スクワット10'
                       : isBirdKiss

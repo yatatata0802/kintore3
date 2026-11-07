@@ -24,7 +24,14 @@ export default function App() {
       if (saved) {
         const parsed: Exercise[] = JSON.parse(saved).map((e: Exercise) => {
           const init = INITIAL_EXERCISES.find((i) => i.id === e.id);
-          return init ? { ...e, giftEmoji: init.giftEmoji, giftName: init.giftName } : e;
+          return init
+            ? {
+                ...e,
+                name: e.name === '懸垂' ? init.name : e.name,
+                giftEmoji: init.giftEmoji,
+                giftName: init.giftName,
+              }
+            : e;
         });
         const orderMap = new Map(INITIAL_EXERCISES.map((e, idx) => [e.id, idx]));
         return parsed.sort((a, b) => (orderMap.get(a.id) ?? 999) - (orderMap.get(b.id) ?? 999));
@@ -41,7 +48,14 @@ export default function App() {
       if (saved) {
         const parsed: GiftRule[] = JSON.parse(saved).map((g: GiftRule) => {
           const init = INITIAL_GIFTS.find((i) => i.id === g.id);
-          return init ? { ...g, name: init.name, emoji: init.emoji } : g;
+          return init
+            ? {
+                ...g,
+                name: init.name,
+                emoji: init.emoji,
+                description: g.description === '懸垂 10回追加' ? init.description : g.description,
+              }
+            : g;
         });
         const giftOrderMap = new Map(INITIAL_GIFTS.map((g, idx) => [g.id, idx]));
         return parsed.sort((a, b) => (giftOrderMap.get(a.id) ?? 999) - (giftOrderMap.get(b.id) ?? 999));
@@ -371,7 +385,7 @@ export default function App() {
         'warning'
       );
     } else if (gift.id === 'corgi') {
-      // コーギー：懸垂 10回追加
+      // コーギー：ハンギングワイパー 10回追加 (id: pull_up)
       setExercises((prev) =>
         prev.map((ex) => {
           if (ex.id === 'pull_up') {
@@ -382,7 +396,7 @@ export default function App() {
       );
       showToast(
         `🐶🐾 コーギー ×${multiplier}`,
-        `懸垂 +${totalDelta}回 追加！`,
+        `ハンギングワイパー +${totalDelta}回 追加！`,
         'warning'
       );
     } else if (gift.id === 'swan') {

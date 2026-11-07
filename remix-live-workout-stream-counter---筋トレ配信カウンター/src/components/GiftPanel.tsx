@@ -234,28 +234,28 @@ export const GiftPanel: React.FC<GiftPanelProps> = ({
                 <div className="mt-1 pt-1 border-t border-neutral-800/80 flex items-center gap-1">
                   <button
                     onClick={() => handleGiftClick(gift, 1)}
-                    title="大好き1個 (腕立て -1回免除)"
+                    title="バラ1個 (腕立て -1回免除)"
                     className="flex-1 py-1 rounded bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 font-mono font-black text-[10px] border border-rose-500/50 active:scale-95 transition cursor-pointer"
                   >
                     -1
                   </button>
                   <button
                     onClick={() => handleGiftClick(gift, 5)}
-                    title="大好き5個 (腕立て -5回免除)"
+                    title="バラ5個 (腕立て -5回免除)"
                     className="flex-1 py-1 rounded bg-rose-500/25 hover:bg-rose-500/35 text-rose-300 font-mono font-black text-[10px] border border-rose-500/60 active:scale-95 transition cursor-pointer"
                   >
                     -5
                   </button>
                   <button
                     onClick={() => handleGiftClick(gift, 10)}
-                    title="大好き10個 (腕立て -10回免除)"
+                    title="バラ10個 (腕立て -10回免除)"
                     className="flex-1 py-1 rounded bg-rose-500/30 hover:bg-rose-500/40 text-rose-200 font-mono font-black text-[10px] border border-rose-500/70 active:scale-95 transition cursor-pointer"
                   >
                     -10
                   </button>
                   <button
                     onClick={() => handleGiftClick(gift, 50)}
-                    title="大好き50個 (腕立て -50回免除)"
+                    title="バラ50個 (腕立て -50回免除)"
                     className="flex-1 py-1 rounded bg-rose-600 hover:bg-rose-500 text-white font-mono font-black text-[10px] active:scale-95 transition cursor-pointer shadow-sm"
                   >
                     -50

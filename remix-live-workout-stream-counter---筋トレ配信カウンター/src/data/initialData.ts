@@ -37,7 +37,7 @@ export const INITIAL_EXERCISES: Exercise[] = [
   },
   {
     id: 'pull_up',
-    name: '懸垂',
+    name: 'ハンギングワイパー',
     icon: '🧗‍♂️',
     unit: '回',
     target: 0,
@@ -109,7 +109,7 @@ export const INITIAL_GIFTS: GiftRule[] = [
     name: 'コーギー',
     emoji: '🐶🐾',
     type: 'interference',
-    description: '懸垂 10回追加',
+    description: 'ハンギングワイパー 10回追加',
     targetExerciseId: 'pull_up',
     repsDelta: 10,
     defaultQuantityText: '1個',

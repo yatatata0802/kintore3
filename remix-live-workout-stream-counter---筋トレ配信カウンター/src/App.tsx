@@ -7,7 +7,6 @@ import { GiftPanel } from './components/GiftPanel';
 import { SettingsModal } from './components/SettingsModal';
 import { StreamOverlayModal } from './components/StreamOverlayModal';
 import { SwanSelectModal } from './components/SwanSelectModal';
-import { CorgiSelectModal } from './components/CorgiSelectModal';
 import { StreamSummaryModal } from './components/StreamSummaryModal';
 import { ToastContainer, ToastMessage } from './components/Toast';
 import { soundManager } from './utils/sound';
@@ -15,7 +14,7 @@ import { WakeLockManager } from './utils/wakeLock';
 import { copyToClipboard, formatRemainingText, formatCompletedText } from './utils/formatter';
 import { fireVictoryConfetti } from './utils/confetti';
 
-const STORAGE_KEY = 'workout_stream_app_state_v12';
+const STORAGE_KEY = 'workout_stream_app_state_v14';
 
 export default function App() {
   // Load state from localStorage if available
@@ -24,11 +23,8 @@ export default function App() {
       const saved = localStorage.getItem(`${STORAGE_KEY}_exercises`);
       if (saved) {
         const parsed: Exercise[] = JSON.parse(saved);
-        // Exclude pull-up (懸垂辞める) and sort strictly by INITIAL_EXERCISES canonical order
         const orderMap = new Map(INITIAL_EXERCISES.map((e, idx) => [e.id, idx]));
-        return parsed
-          .filter((e) => e.id !== 'pull_up')
-          .sort((a, b) => (orderMap.get(a.id) ?? 999) - (orderMap.get(b.id) ?? 999));
+        return parsed.sort((a, b) => (orderMap.get(a.id) ?? 999) - (orderMap.get(b.id) ?? 999));
       }
     } catch {
       // ignore
@@ -41,26 +37,8 @@ export default function App() {
       const saved = localStorage.getItem(`${STORAGE_KEY}_gifts`);
       if (saved) {
         const parsed: GiftRule[] = JSON.parse(saved);
-        // Ensure Corgi is configured as relief gift with -10 reps and sort by INITIAL_GIFTS canonical order
         const giftOrderMap = new Map(INITIAL_GIFTS.map((g, idx) => [g.id, idx]));
-        return parsed
-          .map((g) => {
-            if (g.id === 'corgi') {
-              return {
-                ...g,
-                type: 'relief' as const,
-                name: 'コーギー',
-                emoji: '🐶🐾',
-                description: 'いづれかの種目をマイナス10回！',
-                targetExerciseId: 'pushup',
-                repsDelta: -10,
-                defaultQuantityText: '1個',
-                colorTheme: 'from-amber-500 via-yellow-500 to-amber-600 border-amber-400',
-              };
-            }
-            return g;
-          })
-          .sort((a, b) => (giftOrderMap.get(a.id) ?? 999) - (giftOrderMap.get(b.id) ?? 999));
+        return parsed.sort((a, b) => (giftOrderMap.get(a.id) ?? 999) - (giftOrderMap.get(b.id) ?? 999));
       }
     } catch {
       // ignore
@@ -71,26 +49,6 @@ export default function App() {
   const [basePushupTarget, setBasePushupTarget] = useState<number>(() => {
     try {
       const saved = localStorage.getItem(`${STORAGE_KEY}_base_target`);
-      if (saved) return JSON.parse(saved);
-    } catch {
-      // ignore
-    }
-    return 0;
-  });
-
-  const [rosieModifier, setRosieModifier] = useState<number>(() => {
-    try {
-      const saved = localStorage.getItem(`${STORAGE_KEY}_rosie`);
-      if (saved) return JSON.parse(saved);
-    } catch {
-      // ignore
-    }
-    return 0;
-  });
-
-  const [moneyGunModifier, setMoneyGunModifier] = useState<number>(() => {
-    try {
-      const saved = localStorage.getItem(`${STORAGE_KEY}_moneygun`);
       if (saved) return JSON.parse(saved);
     } catch {
       // ignore
@@ -116,10 +74,7 @@ export default function App() {
   // Modals
   const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
   const [isOverlayOpen, setIsOverlayOpen] = useState<boolean>(false);
-  const [isSwanModalOpen, setIsSwanModalOpen] = useState<boolean>(false);
-  const [isCorgiModalOpen, setIsCorgiModalOpen] = useState<boolean>(false);
-  const [corgiTargetReduction, setCorgiTargetReduction] = useState<number>(10);
-  const [corgiMultiplier, setCorgiMultiplier] = useState<number>(1);
+  const [isGalaxyModalOpen, setIsGalaxyModalOpen] = useState<boolean>(false);
   const [isSummaryOpen, setIsSummaryOpen] = useState<boolean>(false);
 
   // Victory celebration state to trigger only once when clearing
@@ -131,13 +86,11 @@ export default function App() {
       localStorage.setItem(`${STORAGE_KEY}_exercises`, JSON.stringify(exercises));
       localStorage.setItem(`${STORAGE_KEY}_gifts`, JSON.stringify(gifts));
       localStorage.setItem(`${STORAGE_KEY}_base_target`, JSON.stringify(basePushupTarget));
-      localStorage.setItem(`${STORAGE_KEY}_rosie`, JSON.stringify(rosieModifier));
-      localStorage.setItem(`${STORAGE_KEY}_moneygun`, JSON.stringify(moneyGunModifier));
       localStorage.setItem(`${STORAGE_KEY}_gift_counts`, JSON.stringify(giftCounts));
     } catch {
       // ignore storage errors
     }
-  }, [exercises, gifts, basePushupTarget, rosieModifier, moneyGunModifier, giftCounts]);
+  }, [exercises, gifts, basePushupTarget, giftCounts]);
 
   // Toast helper
   const showToast = useCallback((title: string, subtitle?: string, type: 'success' | 'info' | 'warning' = 'success') => {
@@ -167,37 +120,13 @@ export default function App() {
       setHasCelebratedWin(true);
       fireVictoryConfetti();
       soundManager.playVictory();
-      showToast('🎉 全種目ノルマ完走！俺の勝ち！', 'すべてのノルマを消化しました！大勝利です！', 'success');
+      showToast('🎉 全種目ノルマ完走！大勝利！', 'すべてのノルマを消化しました！', 'success');
     } else if (totalRemaining > 0 && hasCelebratedWin) {
       setHasCelebratedWin(false);
     }
   }, [totalRemaining, exercises, hasCelebratedWin, showToast]);
 
-  // Add pushup completed count (+1, +5, +10, -1, etc.)
-  const handleAddPushup = useCallback((count: number) => {
-    setExercises((prev) =>
-      prev.map((ex) => {
-        if (ex.isMainGoal || ex.id === 'pushup') {
-          const newCompleted = Math.max(0, ex.completed + count);
-          return { ...ex, completed: newCompleted };
-        }
-        return ex;
-      })
-    );
-
-    const logItem: ActionLog = {
-      id: `${Date.now()}_${Math.random()}`,
-      timestamp: Date.now(),
-      type: 'exercise_done',
-      title: '腕立て伏せ',
-      details: count > 0 ? `+${count}回 消化` : `${count}回 修正`,
-      exerciseId: 'pushup',
-      deltaCompleted: count,
-    };
-    setLogs((prev) => [logItem, ...prev.slice(0, 49)]);
-  }, []);
-
-  // Add sub-exercise reps completed (+1, +5, -1, etc.)
+  // Add reps completed for any exercise (+1, +5, +10, -1, etc.)
   const handleAddSubExerciseReps = useCallback((exerciseId: string, delta: number) => {
     setExercises((prev) =>
       prev.map((ex) => {
@@ -222,7 +151,7 @@ export default function App() {
     setLogs((prev) => [logItem, ...prev.slice(0, 49)]);
   }, [exercises]);
 
-  // Complete all remaining reps for a sub-exercise
+  // Complete all remaining reps for an exercise
   const handleCompleteAllSubExercise = useCallback((exerciseId: string) => {
     const targetEx = exercises.find((e) => e.id === exerciseId);
     if (!targetEx) return;
@@ -270,8 +199,8 @@ export default function App() {
       })
     );
 
-    setGiftCounts((prev) => ({ ...prev, galaxy: (prev['galaxy'] || prev['swan'] || 0) + 1 }));
-    setIsSwanModalOpen(false);
+    setGiftCounts((prev) => ({ ...prev, galaxy: (prev['galaxy'] || 0) + 1 }));
+    setIsGalaxyModalOpen(false);
     soundManager.playRelief();
 
     const logItem: ActionLog = {
@@ -289,93 +218,21 @@ export default function App() {
     showToast('🌌 銀河発動！1種目帳消し！', `${targetEx.name}の残り${remaining}回を帳消しにしました！`, 'success');
   }, [showToast]);
 
-  // Execute reduction of an exercise by Corgi (コーギー 救済ギフト: 1個でマイナス10回)
-  const handleApplyCorgiReduction = useCallback((targetEx: Exercise, quantity: number) => {
-    const totalReduction = quantity * 10;
-    const remaining = Math.max(0, targetEx.target - targetEx.completed);
-    if (remaining <= 0) return;
-
-    const actualReduction = Math.min(remaining, totalReduction);
-
-    setExercises((prev) =>
-      prev.map((ex) => {
-        if (ex.id === targetEx.id) {
-          return { ...ex, target: ex.target - actualReduction };
-        }
-        return ex;
-      })
-    );
-
-    setGiftCounts((prev) => ({
-      ...prev,
-      corgi: (prev['corgi'] || 0) + quantity,
-    }));
-
-    setIsCorgiModalOpen(false);
-    soundManager.playRelief();
-
-    const newRemaining = Math.max(0, targetEx.target - actualReduction - targetEx.completed);
-
-    const logItem: ActionLog = {
-      id: `${Date.now()}_${Math.random()}`,
-      timestamp: Date.now(),
-      type: 'gift',
-      title: `🐶 コーギー救済 (×${quantity})`,
-      details: `${targetEx.name} -${actualReduction}回 免除 (残${newRemaining}回)`,
-      exerciseId: targetEx.id,
-      giftId: 'corgi',
-      giftQuantity: quantity,
-      deltaTarget: -actualReduction,
-    };
-    setLogs((prev) => [logItem, ...prev.slice(0, 49)]);
-
-    showToast(
-      `🐶🐾 コーギー救済！ (×${quantity})`,
-      `${targetEx.name} を -${actualReduction}回 減らしました！（残り${newRemaining}回）`,
-      'success'
-    );
-  }, [showToast]);
-
-  // Trigger Gift (Interference, Finger Heart penalty, Money Gun all-consecutive, Corgi relief, Galaxy, Encounter with Future)
+  // Trigger Gift
   const handleTriggerGift = useCallback((gift: GiftRule, multiplier: number) => {
     const totalDelta = gift.repsDelta * multiplier;
 
-    // 🐶🐾 コーギー：いずれかの種目をマイナス10回（救済ギフト）
-    if (gift.id === 'corgi') {
-      const remainingExercises = exercises.filter((ex) => ex.target > ex.completed);
-      if (remainingExercises.length === 0) {
-        showToast('🐶🐾 コーギー', '現在、減らす残りノルマはありません', 'info');
-        return;
-      }
-
-      const corgiCount = multiplier;
-      const reductionReps = corgiCount * 10;
-
-      if (remainingExercises.length === 1) {
-        // 1種目のみ残っている場合は即座にその種目を減算！
-        handleApplyCorgiReduction(remainingExercises[0], corgiCount);
-      } else {
-        // 複数種目ある場合は選択モーダルを開く
-        setCorgiTargetReduction(reductionReps);
-        setCorgiMultiplier(corgiCount);
-        setIsCorgiModalOpen(true);
-      }
-      return;
-    }
-
     // 🌌 銀河：いずれか1種目を帳消し
-    if (gift.id === 'galaxy' || gift.id === 'swan' || gift.type === 'clear_one_sub') {
+    if (gift.id === 'galaxy' || gift.type === 'clear_one_sub') {
       const remainingExercises = exercises.filter((ex) => ex.target > ex.completed);
       if (remainingExercises.length === 0) {
         showToast('🌌 銀河', '現在、帳消しにできる残りノルマはありません', 'info');
         return;
       }
       if (remainingExercises.length === 1) {
-        // 1種目のみなら即座に帳消し！
         handleClearOneExercise(remainingExercises[0]);
       } else {
-        // 複数ある場合は選択モーダルを開く
-        setIsSwanModalOpen(true);
+        setIsGalaxyModalOpen(true);
       }
       return;
     }
@@ -402,7 +259,7 @@ export default function App() {
         })
       );
 
-      setGiftCounts((prev) => ({ ...prev, encounter_with_future: (prev['encounter_with_future'] || prev['firework'] || 0) + 1 }));
+      setGiftCounts((prev) => ({ ...prev, encounter_with_future: (prev['encounter_with_future'] || 0) + 1 }));
       fireVictoryConfetti();
       soundManager.playVictory();
 
@@ -427,9 +284,43 @@ export default function App() {
       [gift.id]: (prev[gift.id] || 0) + multiplier,
     }));
 
-    if (gift.id === 'finger_heart' || gift.id === 'rose_bean_rosie') {
-      // フィンガーハート1個で、腕立て１回 (妨害)
-      setRosieModifier((prev) => prev + totalDelta);
+    if (gift.id === 'daisuki') {
+      // 大好き：腕立てマイナス 1回 × multiplier
+      const pushupEx = exercises.find((e) => e.isMainGoal || e.id === 'pushup');
+      const curRemaining = pushupEx ? Math.max(0, pushupEx.target - pushupEx.completed) : 0;
+      const actualMinus = Math.min(curRemaining, Math.abs(totalDelta));
+
+      setExercises((prev) =>
+        prev.map((ex) => {
+          if (ex.isMainGoal || ex.id === 'pushup') {
+            return { ...ex, target: Math.max(ex.completed, ex.target - actualMinus) };
+          }
+          return ex;
+        })
+      );
+      showToast(
+        `🥰❤️ 救済！大好き ×${multiplier}`,
+        `腕立て伏せが -${actualMinus}回 減りました！`,
+        'success'
+      );
+
+      const logItem: ActionLog = {
+        id: `${Date.now()}_${Math.random()}`,
+        timestamp: Date.now(),
+        type: 'gift',
+        title: `${gift.name} (×${multiplier})`,
+        details: `腕立て -${actualMinus}回 救済`,
+        exerciseId: 'pushup',
+        giftId: gift.id,
+        giftQuantity: multiplier,
+        deltaTarget: -actualMinus,
+      };
+      setLogs((prev) => [logItem, ...prev.slice(0, 49)]);
+      return;
+    }
+
+    if (gift.id === 'rose') {
+      // バラ：腕立て伏せ +1回
       setExercises((prev) =>
         prev.map((ex) => {
           if (ex.isMainGoal || ex.id === 'pushup') {
@@ -439,27 +330,72 @@ export default function App() {
         })
       );
       showToast(
-        `🫰 妨害！フィンガーハート ×${multiplier}`,
-        `腕立て伏せが +${totalDelta}回 追加された！`,
+        `🌹 バラ ×${multiplier}`,
+        `腕立て伏せ +${totalDelta}回 追加！`,
         'warning'
       );
-    } else if (gift.id === 'money_gun' && gift.targetExerciseId === 'all_consecutive') {
-      // マネーガンで、全種目連続５回
+    } else if (gift.id === 'cheering_crab') {
+      // 応援するカニ：ジャンプスクワット 10回追加
       setExercises((prev) =>
         prev.map((ex) => {
-          if (ex.id === 'all_consecutive') {
+          if (ex.id === 'jump_squat') {
             return { ...ex, target: ex.target + totalDelta };
           }
           return ex;
         })
       );
       showToast(
-        `🔫💵 マネーガン発動！ ×${multiplier}`,
-        `🔥 全種目連続 +${totalDelta}回 の激ヤバノルマ追加！`,
+        `🦀 応援するカニ ×${multiplier}`,
+        `ジャンプスクワット +${totalDelta}回 追加！`,
+        'warning'
+      );
+    } else if (gift.id === 'bird_kiss') {
+      // 小鳥のキス：パラパラ踊る 1回追加
+      setExercises((prev) =>
+        prev.map((ex) => {
+          if (ex.id === 'parapara_dance') {
+            return { ...ex, target: ex.target + totalDelta };
+          }
+          return ex;
+        })
+      );
+      showToast(
+        `🐦💋 小鳥のキス ×${multiplier}`,
+        `パラパラ踊る +${totalDelta}回 追加！`,
+        'warning'
+      );
+    } else if (gift.id === 'corgi') {
+      // コーギー：懸垂 10回追加
+      setExercises((prev) =>
+        prev.map((ex) => {
+          if (ex.id === 'pull_up') {
+            return { ...ex, target: ex.target + totalDelta };
+          }
+          return ex;
+        })
+      );
+      showToast(
+        `🐶🐾 コーギー ×${multiplier}`,
+        `懸垂 +${totalDelta}回 追加！`,
+        'warning'
+      );
+    } else if (gift.id === 'swan') {
+      // 白鳥：すべて連続で10回 (パラパラ以外) 1回追加
+      setExercises((prev) =>
+        prev.map((ex) => {
+          if (ex.id === 'all_consecutive_no_para') {
+            return { ...ex, target: ex.target + totalDelta };
+          }
+          return ex;
+        })
+      );
+      showToast(
+        `🦢 白鳥発動！ ×${multiplier}`,
+        `すべて連続で10回 (パラパラ以外) +${totalDelta}回 追加！`,
         'warning'
       );
     } else {
-      // Standard interference exercises (Dumbbell punch, Jump lunge, Hanging wiper, Pull-up, etc.)
+      // Standard target
       setExercises((prev) =>
         prev.map((ex) => {
           if (ex.id === gift.targetExerciseId) {
@@ -469,10 +405,10 @@ export default function App() {
         })
       );
       const ex = exercises.find((e) => e.id === gift.targetExerciseId);
-      const exName = ex ? ex.name : '妨害種目';
+      const exName = ex ? ex.name : '筋トレ種目';
       showToast(
-        `⚡ ギフト妨害！${gift.name} ×${multiplier}`,
-        `${exName} +${totalDelta}回 ノルマ追加！`,
+        `⚡ ギフト！${gift.name} ×${multiplier}`,
+        `${exName} +${totalDelta}回 追加！`,
         'warning'
       );
     }
@@ -489,7 +425,7 @@ export default function App() {
       deltaTarget: totalDelta,
     };
     setLogs((prev) => [logItem, ...prev.slice(0, 49)]);
-  }, [exercises, handleApplyCorgiReduction, handleClearOneExercise, showToast]);
+  }, [exercises, handleClearOneExercise, showToast]);
 
   // Undo last action
   const handleUndo = useCallback(() => {
@@ -505,7 +441,7 @@ export default function App() {
       }));
     }
 
-    // If it was a clear action (Swan or Firework)
+    // If it was a clear action (Galaxy or Future)
     if (lastLog.clearedExercises && lastLog.clearedExercises.length > 0) {
       setExercises((prev) =>
         prev.map((ex) => {
@@ -530,33 +466,23 @@ export default function App() {
         })
       );
       showToast('↩️ 元に戻しました', `${lastLog.title}の消化操作を取り消しました`, 'info');
-    } else if (lastLog.type === 'gift' && lastLog.deltaTarget && lastLog.exerciseId) {
+    } else if (lastLog.type === 'gift' && lastLog.deltaTarget !== undefined && lastLog.exerciseId) {
       const delta = lastLog.deltaTarget;
-      if (lastLog.title.includes('ロージー')) {
-        setRosieModifier((prev) => Math.max(0, prev - delta));
-        setExercises((prev) =>
-          prev.map((ex) => (ex.isMainGoal || ex.id === 'pushup' ? { ...ex, target: ex.target - delta } : ex))
-        );
-      } else if (lastLog.title.includes('マネーガン')) {
-        const absDelta = Math.abs(delta);
-        setMoneyGunModifier((prev) => Math.max(0, prev - absDelta));
-        setExercises((prev) =>
-          prev.map((ex) => (ex.isMainGoal || ex.id === 'pushup' ? { ...ex, target: ex.target + absDelta } : ex))
-        );
-      } else {
-        setExercises((prev) =>
-          prev.map((ex) => (ex.id === lastLog.exerciseId ? { ...ex, target: Math.max(0, ex.target - delta) } : ex))
-        );
-      }
-      showToast('↩️ ギフトを取り消しました', `${lastLog.title}のノルマ変更を元に戻しました`, 'info');
+      setExercises((prev) =>
+        prev.map((ex) => {
+          if (ex.id === lastLog.exerciseId) {
+            return { ...ex, target: Math.max(ex.completed, ex.target - delta) };
+          }
+          return ex;
+        })
+      );
+      showToast('↩️ ギフトを取り消しました', `${lastLog.title}の変更を元に戻しました`, 'info');
     }
   }, [logs, showToast]);
 
   // Reset entire stream workout state
   const handleResetStream = useCallback(() => {
     setExercises(INITIAL_EXERCISES);
-    setRosieModifier(0);
-    setMoneyGunModifier(0);
     setGiftCounts({});
     setLogs([]);
     setHasCelebratedWin(false);
@@ -620,8 +546,6 @@ export default function App() {
         return { ...ex, completed: 0, target: 0 };
       })
     );
-    setRosieModifier(0);
-    setMoneyGunModifier(0);
     setHasCelebratedWin(false);
     setLogs([]);
     showToast('🔄 カウントをリセットしました', `腕立て${basePushupTarget}回でスタート！`);
@@ -630,9 +554,7 @@ export default function App() {
   const handleResetAllToDefault = () => {
     setExercises(INITIAL_EXERCISES);
     setGifts(INITIAL_GIFTS);
-    setBasePushupTarget(500);
-    setRosieModifier(0);
-    setMoneyGunModifier(0);
+    setBasePushupTarget(0);
     setHasCelebratedWin(false);
     setLogs([]);
     showToast('✨ 初期設定に復元しました');
@@ -725,20 +647,10 @@ export default function App() {
 
       {/* Galaxy Clear Selection Modal */}
       <SwanSelectModal
-        isOpen={isSwanModalOpen}
-        onClose={() => setIsSwanModalOpen(false)}
+        isOpen={isGalaxyModalOpen}
+        onClose={() => setIsGalaxyModalOpen(false)}
         activeSubExercises={activeExercisesWithRemaining}
         onSelectExerciseToClear={handleClearOneExercise}
-      />
-
-      {/* Corgi Rescue Rep Reduction Modal */}
-      <CorgiSelectModal
-        isOpen={isCorgiModalOpen}
-        onClose={() => setIsCorgiModalOpen(false)}
-        activeExercises={activeExercisesWithRemaining}
-        reductionReps={corgiTargetReduction}
-        corgiCount={corgiMultiplier}
-        onSelectExercise={(ex) => handleApplyCorgiReduction(ex, corgiMultiplier)}
       />
 
       {/* Stream End Summary & Copy Modal */}

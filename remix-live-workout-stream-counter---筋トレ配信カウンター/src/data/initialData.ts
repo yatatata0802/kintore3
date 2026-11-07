@@ -10,8 +10,8 @@ export const INITIAL_EXERCISES: Exercise[] = [
     completed: 0,
     isMainGoal: true,
     color: '#ef4444',
-    giftEmoji: '🌹',
-    giftName: 'バラ',
+    giftEmoji: '⚾',
+    giftName: '野球',
   },
   {
     id: 'jump_squat',
@@ -62,8 +62,8 @@ export const INITIAL_EXERCISES: Exercise[] = [
 export const INITIAL_GIFTS: GiftRule[] = [
   {
     id: 'rose',
-    name: 'バラ',
-    emoji: '🌹',
+    name: '野球',
+    emoji: '⚾',
     type: 'interference',
     description: '腕立て 1回追加',
     targetExerciseId: 'pushup',
@@ -73,8 +73,8 @@ export const INITIAL_GIFTS: GiftRule[] = [
   },
   {
     id: 'daisuki',
-    name: '大好き',
-    emoji: '🥰❤️',
+    name: 'バラ',
+    emoji: '🌹',
     type: 'relief',
     description: '腕立てマイナス 1回！',
     targetExerciseId: 'pushup',

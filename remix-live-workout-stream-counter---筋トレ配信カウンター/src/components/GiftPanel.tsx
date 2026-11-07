@@ -118,11 +118,13 @@ export const GiftPanel: React.FC<GiftPanelProps> = ({
       <div className="grid grid-cols-2 gap-2 flex-1 overflow-y-auto pr-0.5">
         {gifts.map((gift) => {
           const isRelief = gift.type === 'relief' || gift.type === 'clear_one_sub' || gift.type === 'clear_all_sub';
-          const isGalaxy = gift.id === 'galaxy' || gift.id === 'swan' || gift.type === 'clear_one_sub';
-          const isFuture = gift.id === 'encounter_with_future' || gift.id === 'firework' || gift.type === 'clear_all_sub';
+          const isGalaxy = gift.id === 'galaxy' || gift.type === 'clear_one_sub';
+          const isFuture = gift.id === 'encounter_with_future' || gift.type === 'clear_all_sub';
+          const isDaisuki = gift.id === 'daisuki';
+          const isSwan = gift.id === 'swan';
+          const isCrab = gift.id === 'cheering_crab';
+          const isBirdKiss = gift.id === 'bird_kiss';
           const isCorgi = gift.id === 'corgi';
-          const isMoneyGun = gift.id === 'money_gun' || gift.targetExerciseId === 'all_consecutive';
-          const isFingerHeart = gift.id === 'finger_heart';
           const isRose = gift.id === 'rose';
           const isSpecialClear = isGalaxy || isFuture;
 
@@ -134,12 +136,16 @@ export const GiftPanel: React.FC<GiftPanelProps> = ({
                   ? 'bg-gradient-to-br from-cyan-950/90 via-sky-900/60 to-blue-950/80 border-cyan-400 ring-1 ring-cyan-400/40'
                   : isGalaxy
                   ? 'bg-gradient-to-br from-indigo-950/90 via-purple-900/60 to-violet-950/80 border-indigo-400 ring-1 ring-indigo-400/40'
+                  : isDaisuki
+                  ? 'bg-gradient-to-br from-rose-950/80 via-pink-900/50 to-neutral-900 border-rose-400 ring-1 ring-rose-400/40'
+                  : isSwan
+                  ? 'bg-gradient-to-br from-indigo-950/90 via-purple-900/60 to-slate-900 border-indigo-400 ring-1 ring-indigo-400/40'
                   : isCorgi
-                  ? 'bg-gradient-to-br from-amber-950/80 via-yellow-950/50 to-neutral-900 border-amber-400 ring-1 ring-amber-400/40'
-                  : isMoneyGun
-                  ? 'bg-gradient-to-br from-red-950/90 via-rose-900/70 to-purple-950/80 border-red-500 ring-1 ring-red-500/40'
-                  : isFingerHeart
-                  ? 'bg-gradient-to-br from-rose-950/80 to-red-900/60 border-rose-500/80'
+                  ? 'bg-gradient-to-br from-amber-950/80 via-yellow-950/50 to-neutral-900 border-amber-400'
+                  : isCrab
+                  ? 'bg-gradient-to-br from-orange-950/80 to-neutral-900 border-orange-500/80'
+                  : isBirdKiss
+                  ? 'bg-gradient-to-br from-sky-950/80 to-neutral-900 border-sky-500/80'
                   : isRose
                   ? 'bg-gradient-to-br from-pink-950/80 to-neutral-900 border-pink-500/80'
                   : isRelief
@@ -162,12 +168,16 @@ export const GiftPanel: React.FC<GiftPanelProps> = ({
                         ? 'bg-cyan-400/20 text-cyan-300 border border-cyan-400/60 animate-pulse'
                         : isGalaxy
                         ? 'bg-indigo-400/20 text-indigo-300 border border-indigo-400/60'
+                        : isDaisuki
+                        ? 'bg-rose-400/25 text-rose-300 border border-rose-400/60 font-black'
+                        : isSwan
+                        ? 'bg-indigo-400/20 text-indigo-300 border border-indigo-400/50'
                         : isCorgi
-                        ? 'bg-amber-400/20 text-amber-300 border border-amber-400/60'
-                        : isMoneyGun
-                        ? 'bg-red-500/25 text-red-300 border border-red-400/50'
-                        : isFingerHeart
-                        ? 'bg-rose-500/20 text-rose-300 border border-rose-400/40'
+                        ? 'bg-amber-400/20 text-amber-300 border border-amber-400/50'
+                        : isCrab
+                        ? 'bg-orange-400/20 text-orange-300 border border-orange-400/50'
+                        : isBirdKiss
+                        ? 'bg-sky-400/20 text-sky-300 border border-sky-400/50'
                         : isRose
                         ? 'bg-pink-500/20 text-pink-300 border border-pink-400/40'
                         : isRelief
@@ -179,14 +189,18 @@ export const GiftPanel: React.FC<GiftPanelProps> = ({
                       ? '全帳消し'
                       : isGalaxy
                       ? '1種目帳消'
+                      : isDaisuki
+                      ? '救済 腕立て-1'
+                      : isSwan
+                      ? '連続10回'
                       : isCorgi
-                      ? '救済 -10'
-                      : isMoneyGun
-                      ? '全種目'
-                      : isFingerHeart
-                      ? '腕立て'
+                      ? '懸垂10回'
+                      : isCrab
+                      ? 'スクワット10'
+                      : isBirdKiss
+                      ? 'パラパラ'
                       : isRose
-                      ? 'ダンベル'
+                      ? '腕立て+1'
                       : isRelief
                       ? '救済'
                       : '妨害'}
@@ -203,7 +217,7 @@ export const GiftPanel: React.FC<GiftPanelProps> = ({
                 </div>
               </div>
 
-              {/* Action Buttons: Special clear button, Corgi negative buttons, or standard +reps buttons */}
+              {/* Action Buttons: Special clear button, Daisuki negative buttons, or standard +1/+10/+50/+100 buttons */}
               {isSpecialClear ? (
                 <button
                   onClick={() => handleGiftClick(gift, 1)}
@@ -216,35 +230,35 @@ export const GiftPanel: React.FC<GiftPanelProps> = ({
                   <Shield className="w-3.5 h-3.5" />
                   <span>発動する (1個)</span>
                 </button>
-              ) : isCorgi ? (
+              ) : isDaisuki ? (
                 <div className="mt-1 pt-1 border-t border-neutral-800/80 flex items-center gap-1">
                   <button
                     onClick={() => handleGiftClick(gift, 1)}
-                    title="コーギー1個 (-10回免除)"
-                    className="flex-1 py-1 rounded bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 font-mono font-black text-[10px] border border-amber-500/50 active:scale-95 transition cursor-pointer"
+                    title="大好き1個 (腕立て -1回免除)"
+                    className="flex-1 py-1 rounded bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 font-mono font-black text-[10px] border border-rose-500/50 active:scale-95 transition cursor-pointer"
+                  >
+                    -1
+                  </button>
+                  <button
+                    onClick={() => handleGiftClick(gift, 5)}
+                    title="大好き5個 (腕立て -5回免除)"
+                    className="flex-1 py-1 rounded bg-rose-500/25 hover:bg-rose-500/35 text-rose-300 font-mono font-black text-[10px] border border-rose-500/60 active:scale-95 transition cursor-pointer"
+                  >
+                    -5
+                  </button>
+                  <button
+                    onClick={() => handleGiftClick(gift, 10)}
+                    title="大好き10個 (腕立て -10回免除)"
+                    className="flex-1 py-1 rounded bg-rose-500/30 hover:bg-rose-500/40 text-rose-200 font-mono font-black text-[10px] border border-rose-500/70 active:scale-95 transition cursor-pointer"
                   >
                     -10
                   </button>
                   <button
-                    onClick={() => handleGiftClick(gift, 2)}
-                    title="コーギー2個 (-20回免除)"
-                    className="flex-1 py-1 rounded bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 font-mono font-black text-[10px] border border-amber-500/50 active:scale-95 transition cursor-pointer"
-                  >
-                    -20
-                  </button>
-                  <button
-                    onClick={() => handleGiftClick(gift, 5)}
-                    title="コーギー5個 (-50回免除)"
-                    className="flex-1 py-1 rounded bg-amber-500/30 hover:bg-amber-500/40 text-amber-200 font-mono font-black text-[10px] border border-amber-500/60 active:scale-95 transition cursor-pointer"
+                    onClick={() => handleGiftClick(gift, 50)}
+                    title="大好き50個 (腕立て -50回免除)"
+                    className="flex-1 py-1 rounded bg-rose-600 hover:bg-rose-500 text-white font-mono font-black text-[10px] active:scale-95 transition cursor-pointer shadow-sm"
                   >
                     -50
-                  </button>
-                  <button
-                    onClick={() => handleGiftClick(gift, 10)}
-                    title="コーギー10個 (-100回免除)"
-                    className="flex-1 py-1 rounded bg-amber-500 hover:bg-amber-400 text-neutral-950 font-mono font-black text-[10px] active:scale-95 transition cursor-pointer shadow-sm"
-                  >
-                    -100
                   </button>
                 </div>
               ) : (

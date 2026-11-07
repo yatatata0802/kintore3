@@ -22,7 +22,10 @@ export default function App() {
     try {
       const saved = localStorage.getItem(`${STORAGE_KEY}_exercises`);
       if (saved) {
-        const parsed: Exercise[] = JSON.parse(saved);
+        const parsed: Exercise[] = JSON.parse(saved).map((e: Exercise) => {
+          const init = INITIAL_EXERCISES.find((i) => i.id === e.id);
+          return init ? { ...e, giftEmoji: init.giftEmoji, giftName: init.giftName } : e;
+        });
         const orderMap = new Map(INITIAL_EXERCISES.map((e, idx) => [e.id, idx]));
         return parsed.sort((a, b) => (orderMap.get(a.id) ?? 999) - (orderMap.get(b.id) ?? 999));
       }
@@ -36,7 +39,10 @@ export default function App() {
     try {
       const saved = localStorage.getItem(`${STORAGE_KEY}_gifts`);
       if (saved) {
-        const parsed: GiftRule[] = JSON.parse(saved);
+        const parsed: GiftRule[] = JSON.parse(saved).map((g: GiftRule) => {
+          const init = INITIAL_GIFTS.find((i) => i.id === g.id);
+          return init ? { ...g, name: init.name, emoji: init.emoji } : g;
+        });
         const giftOrderMap = new Map(INITIAL_GIFTS.map((g, idx) => [g.id, idx]));
         return parsed.sort((a, b) => (giftOrderMap.get(a.id) ?? 999) - (giftOrderMap.get(b.id) ?? 999));
       }
@@ -285,7 +291,7 @@ export default function App() {
     }));
 
     if (gift.id === 'daisuki') {
-      // 大好き：腕立てマイナス 1回 × multiplier
+      // バラ（id: daisuki）：腕立てマイナス 1回 × multiplier
       const pushupEx = exercises.find((e) => e.isMainGoal || e.id === 'pushup');
       const curRemaining = pushupEx ? Math.max(0, pushupEx.target - pushupEx.completed) : 0;
       const actualMinus = Math.min(curRemaining, Math.abs(totalDelta));
@@ -299,7 +305,7 @@ export default function App() {
         })
       );
       showToast(
-        `🥰❤️ 救済！大好き ×${multiplier}`,
+        `🌹 救済！バラ ×${multiplier}`,
         `腕立て伏せが -${actualMinus}回 減りました！`,
         'success'
       );
@@ -320,7 +326,7 @@ export default function App() {
     }
 
     if (gift.id === 'rose') {
-      // バラ：腕立て伏せ +1回
+      // 野球（id: rose）：腕立て伏せ +1回
       setExercises((prev) =>
         prev.map((ex) => {
           if (ex.isMainGoal || ex.id === 'pushup') {
@@ -330,7 +336,7 @@ export default function App() {
         })
       );
       showToast(
-        `🌹 バラ ×${multiplier}`,
+        `⚾ 野球 ×${multiplier}`,
         `腕立て伏せ +${totalDelta}回 追加！`,
         'warning'
       );
